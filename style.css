@@ -1,49 +1,147 @@
+:root {
+    --primary-color: #4a90e2;
+    --bg-color: #f9f9f9;
+    --sidebar-width: 300px;
+}
+
 body {
     margin: 0;
     padding: 0;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 14px;
-    background-color: #f4f4f4;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+/* 顶部导航 */
+.top-bar {
     background: white;
-    min-height: 100vh;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.header {
+    padding: 10px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    z-index: 10;
 }
 
-#status {
+.logo {
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-left: 5px;
+}
+
+.btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.status-badge {
+    font-size: 0.8em;
+    color: #666;
+}
+
+/* 主布局：左右分栏 */
+.main-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    /* 防止整个页面滚动 */
+}
+
+/* 左侧日历 */
+.calendar-section {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: white;
+}
+
+/* 右侧侧边栏 (仿表格样式) */
+.sidebar-section {
+    width: var(--sidebar-width);
+    background: #f0f7ff;
+    /* 浅蓝色背景，类似校历右侧 */
+    border-left: 2px solid #dbeeff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.task-container {
+    flex: 1;
+}
+
+.task-item {
+    background: white;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    border-left: 4px solid var(--primary-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.task-item:active {
+    transform: scale(0.98);
+}
+
+.task-date {
+    font-size: 0.8em;
     color: #888;
-    font-size: 0.9em;
+    display: block;
+    margin-bottom: 4px;
 }
 
-/* FullCalendar 的高度自适应 */
-#calendar {
-    height: 85vh;
+.task-title {
+    font-weight: 500;
 }
 
-/* 手机端适配：字体和按钮调整 */
+/* FullCalendar 样式微调 */
+.fc-toolbar-title {
+    font-size: 1.5em !important;
+}
+
+.fc-event {
+    cursor: pointer;
+}
+
+/* 手机端适配：变为上下结构 */
 @media (max-width: 768px) {
-    .fc-toolbar {
+    .main-layout {
+        flex-direction: column;
+    }
+
+    .sidebar-section {
+        width: auto;
+        height: 30%;
+        /* 底部留给任务列表 */
+        border-left: none;
+        border-top: 2px solid #ddd;
+    }
+
+    .calendar-section {
+        height: 70%;
+    }
+
+    .top-bar {
         flex-direction: column;
         gap: 10px;
     }
 
-    .fc-toolbar-title {
-        font-size: 1.2em !important;
-    }
-
-    .container {
-        padding: 10px;
+    .fc-header-toolbar {
+        flex-wrap: wrap;
+        font-size: 0.8em;
     }
 }
