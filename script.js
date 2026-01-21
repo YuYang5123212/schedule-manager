@@ -1,15 +1,21 @@
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
 // 1. 引入 Firebase 模块
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 2. Firebase 配置 (请替换为你自己的!)
+// 2. Firebase 配置 (替换为自己的)
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyAf_u15MmTaCn0fx6Z9_aTWPKot8xoptTk",
+    authDomain: "my-schedule-app-8b64a.firebaseapp.com",
+    projectId: "my-schedule-app-8b64a",
+    storageBucket: "my-schedule-app-8b64a.firebasestorage.app",
+    messagingSenderId: "288900557615",
+    appId: "1:288900557615:web:da80a3f0beaeaa70b50fda"
 };
 
 // 初始化 Firebase
