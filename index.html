@@ -1,30 +1,33 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>�ҵ�ȫƽ̨�ճ̹���</title>
-    
-    <!-- ���� FullCalendar ��ʽ -->
+    <title>我的全平台日程管理</title>
+
+    <!-- 引入 FullCalendar 样式 -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-    
-    <!-- �Զ�����ʽ -->
+
+    <!-- 自定义样式 -->
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <div class="container">
-        <!-- ͷ�������� -->
+        <!-- 头部控制栏 -->
         <div class="header">
-            <h1>�ҵ��ճ�</h1>
-            <div id="status">����ͬ��...</div>
+            <h1>我的日程</h1>
+            <div id="status">正在同步...</div>
         </div>
 
-        <!-- �������� -->
+        <!-- 日历容器 -->
         <div id='calendar'></div>
     </div>
 
-    <!-- ���� Firebase SDK (ʹ�� Module ��ʽ) -->
+    <!-- 引入 Firebase SDK (使用 Module 方式) -->
     <script type="module" src="script.js"></script>
 </body>
+
 </html>
