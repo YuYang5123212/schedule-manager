@@ -12,7 +12,7 @@ body {
     padding: 20px;
     background: white;
     min-height: 100vh;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .header {
@@ -27,20 +27,22 @@ body {
     font-size: 0.9em;
 }
 
-/* FullCalendar 的高度自适应 */
+/* FullCalendar 鐨勯珮搴﹁嚜閫傚簲 */
 #calendar {
-    height: 85vh; 
+    height: 85vh;
 }
 
-/* 手机端适配：字体和按钮调整 */
+/* 鎵嬫満绔�傞厤锛氬瓧浣撳拰鎸夐挳璋冩暣 */
 @media (max-width: 768px) {
     .fc-toolbar {
         flex-direction: column;
         gap: 10px;
     }
+
     .fc-toolbar-title {
         font-size: 1.2em !important;
     }
+
     .container {
         padding: 10px;
     }

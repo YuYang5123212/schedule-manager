@@ -3,11 +3,11 @@ import { initializeApp } from "firebase/app";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
-// 1. ÒıÈë Firebase Ä£¿é
+// 1. å¼•å…¥ Firebase æ¨¡å—
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 2. Firebase ÅäÖÃ (Ìæ»»Îª×Ô¼ºµÄ)
+// 2. Firebase é…ç½® (æ›¿æ¢ä¸ºè‡ªå·±çš„)
 // Your web app's Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyAf_u15MmTaCn0fx6Z9_aTWPKot8xoptTk",
@@ -18,17 +18,17 @@ const firebaseConfig = {
     appId: "1:288900557615:web:da80a3f0beaeaa70b50fda"
 };
 
-// ³õÊ¼»¯ Firebase
+// åˆå§‹åŒ– Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const eventsCollection = collection(db, "events");
 
-// 3. ³õÊ¼»¯ÈÕÀú
+// 3. åˆå§‹åŒ–æ—¥å†
 document.addEventListener('DOMContentLoaded', function () {
     var calendarEl = document.getElementById('calendar');
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        // ÊÓÍ¼ÉèÖÃ£º°üÀ¨Äê(multiMonthYear), ÔÂ, ÖÜ, ÁĞ±í
+        // è§†å›¾è®¾ç½®ï¼šåŒ…æ‹¬å¹´(multiMonthYear), æœˆ, å‘¨, åˆ—è¡¨
         initialView: 'dayGridMonth',
         headerToolbar: {
             left: 'prev,next today',
@@ -36,48 +36,48 @@ document.addEventListener('DOMContentLoaded', function () {
             right: 'multiMonthYear,dayGridMonth,timeGridWeek,listWeek'
         },
         buttonText: {
-            year: 'ÄêÀú',
-            month: 'ÔÂÀú',
-            week: 'ÖÜÀú',
-            list: 'ÈÎÎñÇåµ¥',
-            today: '½ñÌì'
+            year: 'å¹´å†',
+            month: 'æœˆå†',
+            week: 'å‘¨å†',
+            list: 'ä»»åŠ¡æ¸…å•',
+            today: 'ä»Šå¤©'
         },
-        locale: 'zh-cn', // ÖĞÎÄÖ§³Ö
-        navLinks: true, // µã»÷ÈÕÆÚ¿ÉÒÔ½øÈëµ±ÌìÊÓÍ¼
-        editable: true, // ÔÊĞíÍÏ×§ĞŞ¸Ä
-        selectable: true, // ÔÊĞí¿òÑ¡´´½¨
-        dayMaxEvents: true, // ÊÂ¼ş¶àµÄÊ±ºòÕÛµş
+        locale: 'zh-cn', // ä¸­æ–‡æ”¯æŒ
+        navLinks: true, // ç‚¹å‡»æ—¥æœŸå¯ä»¥è¿›å…¥å½“å¤©è§†å›¾
+        editable: true, // å…è®¸æ‹–æ‹½ä¿®æ”¹
+        selectable: true, // å…è®¸æ¡†é€‰åˆ›å»º
+        dayMaxEvents: true, // äº‹ä»¶å¤šçš„æ—¶å€™æŠ˜å 
 
-        // --- ÊÂ¼ş½»»¥Âß¼­ ---
+        // --- äº‹ä»¶äº¤äº’é€»è¾‘ ---
 
-        // A. µã»÷ÈÕÆÚ/Ê±¼ä¶Î£ºĞÂ½¨ÈÕ³Ì
+        // A. ç‚¹å‡»æ—¥æœŸ/æ—¶é—´æ®µï¼šæ–°å»ºæ—¥ç¨‹
         select: function (info) {
-            let title = prompt('ÇëÊäÈëÈÕ³Ì±êÌâ:');
+            let title = prompt('è¯·è¾“å…¥æ—¥ç¨‹æ ‡é¢˜:');
             if (title) {
-                // ±£´æµ½ Firebase
+                // ä¿å­˜åˆ° Firebase
                 addDoc(eventsCollection, {
                     title: title,
                     start: info.startStr,
                     end: info.endStr,
                     allDay: info.allDay
                 }).then(() => {
-                    console.log("ÈÕ³ÌÒÑ±£´æµ½ÔÆ¶Ë");
+                    console.log("æ—¥ç¨‹å·²ä¿å­˜åˆ°äº‘ç«¯");
                 }).catch((error) => {
-                    alert("±£´æÊ§°Ü: " + error);
+                    alert("ä¿å­˜å¤±è´¥: " + error);
                 });
             }
             calendar.unselect();
         },
 
-        // B. µã»÷ÒÑÓĞÈÕ³Ì£ºÉ¾³ı (Êµ¼ÊÓ¦ÓÃ¿ÉÒÔ×ö³Éµ¯´°±à¼­)
+        // B. ç‚¹å‡»å·²æœ‰æ—¥ç¨‹ï¼šåˆ é™¤ (å®é™…åº”ç”¨å¯ä»¥åšæˆå¼¹çª—ç¼–è¾‘)
         eventClick: function (info) {
-            if (confirm("È·¶¨ÒªÉ¾³ı '" + info.event.title + "' Âğ?")) {
-                // ´Ó Firebase É¾³ı
+            if (confirm("ç¡®å®šè¦åˆ é™¤ '" + info.event.title + "' å—?")) {
+                // ä» Firebase åˆ é™¤
                 deleteDoc(doc(db, "events", info.event.id));
             }
         },
 
-        // C. ÍÏ×§»òËõ·ÅÈÕ³Ì£º¸üĞÂÊ±¼ä
+        // C. æ‹–æ‹½æˆ–ç¼©æ”¾æ—¥ç¨‹ï¼šæ›´æ–°æ—¶é—´
         eventDrop: function (info) {
             updateEventInFirebase(info.event);
         },
@@ -88,24 +88,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     calendar.render();
 
-    // 4. ÊµÊ±¼àÌı Firebase Êı¾İ¿â±ä»¯ (ºËĞÄÍ¬²½¹¦ÄÜ)
-    // Ö»ÒªÊı¾İ¿â±äÁË£¨ÎŞÂÛÊÇÔÚÊÖ»úÉÏ¸ÄµÄ£¬»¹ÊÇµçÄÔÉÏ¸ÄµÄ£©£¬ÕâÀï¶¼»áÊÕµ½Í¨Öª
+    // 4. å®æ—¶ç›‘å¬ Firebase æ•°æ®åº“å˜åŒ– (æ ¸å¿ƒåŒæ­¥åŠŸèƒ½)
+    // åªè¦æ•°æ®åº“å˜äº†ï¼ˆæ— è®ºæ˜¯åœ¨æ‰‹æœºä¸Šæ”¹çš„ï¼Œè¿˜æ˜¯ç”µè„‘ä¸Šæ”¹çš„ï¼‰ï¼Œè¿™é‡Œéƒ½ä¼šæ”¶åˆ°é€šçŸ¥
     onSnapshot(eventsCollection, (snapshot) => {
-        document.getElementById('status').innerText = 'Êı¾İÒÑÍ¬²½ ' + new Date().toLocaleTimeString();
+        document.getElementById('status').innerText = 'æ•°æ®å·²åŒæ­¥ ' + new Date().toLocaleTimeString();
 
-        // Çå¿Õµ±Ç°ÈÕÀúÏÔÊ¾£¬·ÀÖ¹ÖØ¸´
+        // æ¸…ç©ºå½“å‰æ—¥å†æ˜¾ç¤ºï¼Œé˜²æ­¢é‡å¤
         calendar.removeAllEvents();
 
-        // ±éÀúÊı¾İ¿âÖĞµÄÎÄµµ²¢Ìí¼Óµ½ÈÕÀú
+        // éå†æ•°æ®åº“ä¸­çš„æ–‡æ¡£å¹¶æ·»åŠ åˆ°æ—¥å†
         snapshot.forEach((doc) => {
             let eventData = doc.data();
-            // FullCalendar ĞèÒª id ×Ö¶ÎÀ´Ê¶±ğÊÂ¼ş
+            // FullCalendar éœ€è¦ id å­—æ®µæ¥è¯†åˆ«äº‹ä»¶
             eventData.id = doc.id;
             calendar.addEvent(eventData);
         });
     });
 
-    // ¸¨Öúº¯Êı£º¸üĞÂÊÂ¼ş
+    // è¾…åŠ©å‡½æ•°ï¼šæ›´æ–°äº‹ä»¶
     function updateEventInFirebase(event) {
         updateDoc(doc(db, "events", event.id), {
             start: event.startStr,
