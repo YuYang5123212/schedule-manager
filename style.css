@@ -1,0 +1,47 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    background-color: #f4f4f4;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: white;
+    min-height: 100vh;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+#status {
+    color: #888;
+    font-size: 0.9em;
+}
+
+/* FullCalendar 的高度自适应 */
+#calendar {
+    height: 85vh; 
+}
+
+/* 手机端适配：字体和按钮调整 */
+@media (max-width: 768px) {
+    .fc-toolbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .fc-toolbar-title {
+        font-size: 1.2em !important;
+    }
+    .container {
+        padding: 10px;
+    }
+}
