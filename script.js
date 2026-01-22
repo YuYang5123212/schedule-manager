@@ -27,67 +27,75 @@ document.addEventListener('DOMContentLoaded', function () {
     var calendarEl = document.getElementById('calendar');
     var taskListEl = document.getElementById('task-list');
 
-    // 初始化 FullCalendar
+    // =========================================
+    // 1. FullCalendar 配置
+    // =========================================
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        // 初始视图：多月视图（年历模式）
-        initialView: 'multiMonthYear',
-        multiMonthMaxColumns: 2, // 电脑上显示两列（更像校历），手机自动调整
+        // 自定义视图：滚动周历
+        views: {
+            rollingWeek: {
+                type: 'timeGrid',
+                duration: { days: 7 }, // 一次看7天
+                buttonText: '7天视图',
+                // 关键点：点击前进/后退时，只移动1天，产生“滑动”感
+                dateIncrement: { days: 1 }
+            }
+        },
+        initialView: 'dayGridMonth', // 默认月历
 
+        // 界面配置
         headerToolbar: {
-            left: 'prev,next today',
+            left: 'prev,next today', // 保留导航箭头
             center: 'title',
-            right: '' // 按钮我们自己做在上面的 HTML 里了，这里留空让界面更干净
+            right: '' // 隐藏原生视图切换按钮，使用悬浮球
         },
         locale: 'zh-cn',
-        navLinks: false, // 关闭默认跳转，我们自己写逻辑
+        navLinks: false,
         editable: true,
         selectable: true,
-        dayMaxEvents: false, // 年历模式下，尽量显示圆点或简写
+        dayMaxEvents: true,
 
-        // ==========================================
-        // 🟢 核心交互：下钻逻辑 (Drill-down)
-        // ==========================================
+        // 🟢 需求：当前时间红线
+        nowIndicator: true,
+
+        // 🟢 需求：月历点击某天 -> 跳转到该天的 7 天视角
         dateClick: function (info) {
-            // 获取当前视图类型
             let currentView = calendar.view.type;
 
-            if (currentView === 'multiMonthYear') {
-                // 如果在年历，点击任何日期 -> 进入该月的月历
-                calendar.changeView('dayGridMonth', info.dateStr);
-                document.getElementById('btn-overview').classList.remove('active');
-                document.getElementById('btn-detail').classList.add('active');
-            } else if (currentView === 'dayGridMonth') {
-                // 如果在月历，点击日期 -> 进入周历（或者新建日程，看你习惯）
-                // 这里我们设定：单击空白处询问是否新建，避免误触
+            if (currentView === 'dayGridMonth' || currentView === 'multiMonthYear') {
+                // 跳转到 rollingWeek 并定位到点击的那一天
+                calendar.changeView('rollingWeek', info.dateStr);
             }
         },
 
-        // 选中日期新建
+        // 选择时间段新建
         select: function (info) {
-            // 只有在非年历模式下才允许拖拽新建，防止在年视图误操作
-            if (calendar.view.type !== 'multiMonthYear') {
-                createEvent(info.startStr, info.endStr, info.allDay);
-            }
+            // 在周视图里，可以直接框选时间段
+            createEvent(info.startStr, info.endStr, info.allDay);
+            calendar.unselect();
         },
 
-        // 点击事件删除
+        // 事件操作
         eventClick: function (info) {
             if (confirm("删除日程: " + info.event.title + "?")) {
                 deleteDoc(doc(db, "events", info.event.id));
             }
         },
-
-        // 拖拽更新
         eventDrop: function (info) { updateDbEvent(info.event); },
         eventResize: function (info) { updateDbEvent(info.event); }
     });
 
-    // 挂载到全局，方便 HTML 按钮调用
-    window.calendarAPI = calendar;
+    calendar.render();
+
+    // 暴露给全局，供悬浮按钮调用
+    window.changeView = function (viewName) {
+        calendar.changeView(viewName);
+        toggleFab(false); // 切换后自动收起菜单
+    };
+
     window.manualAddEvent = function () {
-        let title = prompt("请输入日程内容:");
+        let title = prompt("请输入日程:");
         if (title) {
-            // 默认加在今天
             let today = new Date().toISOString().split('T')[0];
             addDoc(eventsCollection, {
                 title: title,
@@ -96,84 +104,114 @@ document.addEventListener('DOMContentLoaded', function () {
                 allDay: true
             });
         }
+        toggleFab(false);
     };
 
-    calendar.render();
 
-    // ==========================================
-    // 🔵 数据库同步 (修复手机端问题)
-    // ==========================================
-    // 使用 query 和 orderBy 确保顺序一致
+    // =========================================
+    // 2. Firebase 同步逻辑 (保持不变)
+    // =========================================
     const q = query(eventsCollection, orderBy("start", "asc"));
-
     onSnapshot(q, (snapshot) => {
-        document.getElementById('status').innerText = '✅ 数据已同步';
-        document.getElementById('status').style.color = 'green';
-
-        // 1. 更新日历
+        document.getElementById('status').innerText = '✅';
         calendar.removeAllEvents();
-
-        // 2. 清空侧边栏任务列表
         taskListEl.innerHTML = '';
 
         snapshot.forEach((doc) => {
             let data = doc.data();
-            let eventObj = {
-                id: doc.id,
-                title: data.title,
-                start: data.start,
-                end: data.end,
-                allDay: data.allDay
-            };
-
-            // 添加到日历
+            let eventObj = { id: doc.id, ...data };
             calendar.addEvent(eventObj);
-
-            // 添加到右侧列表 (只显示未来的，或者最近的)
             renderTaskItem(eventObj);
         });
-    }, (error) => {
-        document.getElementById('status').innerText = '❌ 同步失败';
-        console.error("Sync error:", error);
     });
 
-    // 辅助：渲染侧边栏列表项
+    function createEvent(start, end, allDay) {
+        let title = prompt('请输入日程标题:');
+        if (title) addDoc(eventsCollection, { title, start, end, allDay });
+    }
+    function updateDbEvent(e) {
+        updateDoc(doc(db, "events", e.id), { start: e.startStr, end: e.endStr, allDay: e.allDay });
+    }
     function renderTaskItem(event) {
         let div = document.createElement('div');
-        div.className = 'task-item';
-        // 格式化日期
-        let dateStr = event.start;
-        div.innerHTML = `
-            <span class="task-date">${dateStr}</span>
-            <span class="task-title">${event.title}</span>
-        `;
+        div.className = 'task-item'; // 记得在css里把task-item样式加回来
+        div.style.padding = "10px";
+        div.style.marginBottom = "5px";
+        div.style.background = "white";
+        div.style.borderLeft = "3px solid #4a90e2";
+        div.innerHTML = `<b>${event.title}</b><br><small>${event.start.substring(0, 10)}</small>`;
         div.onclick = () => {
-            // 点击列表，日历跳转到那一天
-            calendar.gotoDate(event.start);
-            calendar.changeView('dayGridMonth');
+            calendar.changeView('rollingWeek', event.start);
         };
         taskListEl.appendChild(div);
     }
-
-    // 辅助：创建
-    function createEvent(start, end, allDay) {
-        let title = prompt('请输入日程标题:');
-        if (title) {
-            addDoc(eventsCollection, {
-                title: title,
-                start: start,
-                end: end,
-                allDay: allDay
-            });
-        }
-    }
-
-    // 辅助：更新
-    function updateDbEvent(event) {
-        updateDoc(doc(db, "events", event.id), {
-            start: event.startStr,
-            end: event.endStr,
-            allDay: event.allDay
-        });
-    }
 });
+
+// =========================================
+// 3. 悬浮按钮 (FAB) 拖拽与点击逻辑
+// =========================================
+const fab = document.getElementById('fab-container');
+const fabMain = document.getElementById('fab-main');
+let isDragging = false;
+let startX, startY, initialLeft, initialTop;
+let dragThreshold = 5; // 移动超过5像素算拖拽，否则算点击
+
+// 鼠标/手指按下
+fabMain.addEventListener('pointerdown', (e) => {
+    isDragging = false;
+    fab.setPointerCapture(e.pointerId); // 捕获指针，防止快速拖动丢失
+    startX = e.clientX;
+    startY = e.clientY;
+
+    const rect = fab.getBoundingClientRect();
+    initialLeft = rect.left;
+    initialTop = rect.top;
+
+    // 移除 bottom/right 定位，改为 left/top 以便跟随
+    fab.style.bottom = 'auto';
+    fab.style.right = 'auto';
+    fab.style.left = initialLeft + 'px';
+    fab.style.top = initialTop + 'px';
+
+    fabMain.addEventListener('pointermove', onPointerMove);
+    fabMain.addEventListener('pointerup', onPointerUp);
+});
+
+function onPointerMove(e) {
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    // 如果移动距离够大，标记为正在拖拽
+    if (Math.abs(dx) > dragThreshold || Math.abs(dy) > dragThreshold) {
+        isDragging = true;
+        // 收起菜单
+        toggleFab(false);
+    }
+
+    // 更新位置
+    fab.style.left = (initialLeft + dx) + 'px';
+    fab.style.top = (initialTop + dy) + 'px';
+}
+
+function onPointerUp(e) {
+    fabMain.removeEventListener('pointermove', onPointerMove);
+    fabMain.removeEventListener('pointerup', onPointerUp);
+
+    // 如果不是拖拽，则是点击
+    if (!isDragging) {
+        toggleFab(); // 切换展开/收起
+    } else {
+        // 拖拽结束，可以做一些吸附边缘的逻辑（可选）
+        // 这里简单处理：防止拖出屏幕
+    }
+}
+
+// 切换菜单展开状态
+window.toggleFab = function (forceState) {
+    if (typeof forceState === 'boolean') {
+        if (forceState) fab.classList.add('active');
+        else fab.classList.remove('active');
+    } else {
+        fab.classList.toggle('active');
+    }
+}

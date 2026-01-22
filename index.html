@@ -3,64 +3,58 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>我的日程管理系统</title>
     <!-- 引入 FullCalendar -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-    <link rel="stylesheet" href="style.css?v=2.0">
+    <link rel="stylesheet" href="style.css?v=3.0">
+    <!-- 引入 FontAwesome 图标 (用于悬浮按钮) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
 
-    <!-- 顶部导航栏 -->
+    <!-- 顶部仅保留标题和状态 -->
     <div class="top-bar">
-        <div class="logo">📅 个人日程中心</div>
-        <div class="controls">
-            <button onclick="switchView('overview')" class="btn active" id="btn-overview">全局概览 (年)</button>
-            <button onclick="switchView('detail')" class="btn" id="btn-detail">详细管理 (月/周)</button>
-        </div>
+        <div class="logo">📅 个人日程</div>
         <div id="status" class="status-badge">连接中...</div>
     </div>
 
     <!-- 主容器 -->
     <div class="main-layout">
-
         <!-- 左侧：日历区域 -->
         <div class="calendar-section">
             <div id='calendar'></div>
         </div>
 
-        <!-- 右侧：任务清单/备注区域 (仿校历右侧) -->
+        <!-- 右侧：任务清单 -->
         <div class="sidebar-section">
-            <h3>📌 待办事项 / 备注</h3>
+            <h3>📌 待办事项</h3>
             <div id="task-list" class="task-container">
-                <!-- 这里的任务会通过 JS 动态生成 -->
-                <p style="color:#999; text-align:center">暂无待办</p>
-            </div>
-
-            <div class="quick-add">
-                <button onclick="manualAddEvent()" style="width:100%; margin-top:10px;">+ 快速添加日程</button>
+                <p style="color:#999; text-align:center; margin-top:20px">暂无待办</p>
             </div>
         </div>
     </div>
 
-    <!-- 引入 JS (注意 ?v=2.0 用于强制手机刷新缓存) -->
-    <script type="module" src="script.js?v=2.0"></script>
+    <!-- 悬浮拖拽按钮 (Floating Action Button) -->
+    <div id="fab-container" class="fab-container">
+        <!-- 子菜单项 (默认隐藏) -->
+        <div class="fab-options">
+            <button class="fab-btn sub-btn" onclick="changeView('multiMonthYear')" title="年历"><i
+                    class="fas fa-calendar"></i></button>
+            <button class="fab-btn sub-btn" onclick="changeView('dayGridMonth')" title="月历"><i
+                    class="fas fa-calendar-alt"></i></button>
+            <button class="fab-btn sub-btn" onclick="changeView('rollingWeek')" title="周视"><i
+                    class="fas fa-columns"></i></button>
+            <button class="fab-btn sub-btn" onclick="manualAddEvent()" title="新建"><i class="fas fa-plus"></i></button>
+        </div>
+        <!-- 主按钮 -->
+        <div class="fab-btn main-btn" id="fab-main">
+            <i class="fas fa-bars"></i>
+        </div>
+    </div>
 
-    <!-- 全局函数绑定 (用于HTML中的onclick) -->
-    <script>
-        // 简单的视图切换逻辑，具体日历操作在 script.js 内部
-        window.switchView = function (mode) {
-            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-            if (mode === 'overview') {
-                document.getElementById('btn-overview').classList.add('active');
-                window.calendarAPI.changeView('multiMonthYear');
-            } else {
-                document.getElementById('btn-detail').classList.add('active');
-                window.calendarAPI.changeView('dayGridMonth');
-            }
-        }
-    </script>
+    <script type="module" src="script.js?v=3.0"></script>
 </body>
 
 </html>
