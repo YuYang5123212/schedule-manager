@@ -196,13 +196,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const q = query(eventsCollection, orderBy("start", "asc"));
     onSnapshot(q, (snapshot) => {
         document.getElementById('status').innerText = '✅';
-        document.getElementById('status').innerText = '✅';
         calendar.removeAllEvents();
         taskListEl.innerHTML = '';
 
         snapshot.forEach((doc) => {
             let data = doc.data();
-            let eventObj = { id: doc.id, ...data };
             let eventObj = { id: doc.id, ...data };
             calendar.addEvent(eventObj);
 
