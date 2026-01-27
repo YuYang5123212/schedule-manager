@@ -1,202 +1,232 @@
 :root {
-    --primary-color: #4a90e2;
-    --bg-color: #f9f9f9;
+    --primary-color: #333;
+    /* 主色调改为深色，配合白色按钮 */
+    --accent-color: #4a90e2;
+    --bg-color: #f5f7fa;
 }
 
 body {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
     background-color: var(--bg-color);
     height: 100vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    /* 防止整体回弹，内部滚动 */
 }
 
-/* 顶部 */
+/* 顶部与 Logo */
 .top-bar {
-    height: 50px;
+    height: 44px;
     background: white;
-    padding: 0 20px;
+    padding: 0 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #eaeaea;
     flex-shrink: 0;
-    /* 防止被压缩 */
+}
+
+.logo {
+    font-weight: 700;
+    color: #333;
+}
+
+#status {
+    font-size: 12px;
+    color: #999;
 }
 
 /* 主布局 */
 .main-layout {
     display: flex;
     flex: 1;
-    height: calc(100vh - 50px);
-    /* 减去头部高度 */
     overflow: hidden;
+    position: relative;
 }
 
 .calendar-section {
     flex: 1;
-    padding: 10px;
+    padding: 0;
+    /* 移除内边距，让日历撑满 */
     background: white;
     overflow: hidden;
     position: relative;
 }
 
-/* 动画：淡入效果 */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(5px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* FullCalendar 样式微调 */
+.fc-header-toolbar {
+    margin-bottom: 0 !important;
+    padding: 10px;
 }
 
-.fade-anim {
-    animation: fadeIn 0.4s ease-out;
+.fc-button {
+    font-size: 0.85em !important;
+    font-weight: 500 !important;
 }
 
 /* 侧边栏 */
 .sidebar-section {
-    width: 260px;
-    background: #f4f8fb;
-    border-left: 1px solid #e1e4e8;
-    padding: 15px;
+    width: 280px;
+    background: white;
+    border-left: 1px solid #eaeaea;
+    padding: 16px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    z-index: 10;
 }
 
-/* 侧边栏任务卡片 */
 .task-item {
-    background: white;
+    background: #fff;
     padding: 12px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
+    border-left-width: 4px;
+    /* 颜色条 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     cursor: pointer;
-    font-size: 14px;
-    border-left: 4px solid #ddd;
-    /* 默认颜色，JS会覆盖 */
 }
 
-/* ============================
-   自定义弹窗 (Modal) 样式
-   ============================ */
+.task-desc {
+    font-size: 0.85em;
+    color: #888;
+    margin-top: 4px;
+    display: block;
+}
+
+/* 弹窗样式 */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.4);
     z-index: 2000;
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(2px);
 }
 
 .modal-content {
     background: white;
-    padding: 25px;
-    border-radius: 12px;
-    width: 85%;
-    max-width: 400px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    animation: fadeIn 0.3s;
+    padding: 24px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 380px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
 }
 
-.modal-content h3 {
-    margin-top: 0;
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 6px;
 }
 
 .modal-content input[type="text"] {
     width: 100%;
     padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    border: 1px solid #eee;
+    background: #f9f9f9;
+    border-radius: 8px;
     box-sizing: border-box;
-    font-size: 16px;
+    font-size: 15px;
 }
 
+/* 标签胶囊样式 */
+.tags-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.tag-chip {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: white;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+
+.tag-chip.selected {
+    opacity: 1;
+    transform: scale(1.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.add-tag-trigger {
+    font-size: 12px;
+    color: var(--accent-color);
+    cursor: pointer;
+    display: inline-block;
+}
+
+/* 按钮组 */
 .modal-buttons {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 20px;
-}
-
-button {
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
+    margin-top: 25px;
 }
 
 .btn-save {
-    background: var(--primary-color);
+    background: #333;
     color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
 }
 
 .btn-cancel {
-    background: #eee;
+    background: #f0f0f0;
     color: #333;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
 }
 
 .btn-delete {
-    background: #ff6b6b;
+    background: #ff4d4f;
     color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
 }
 
-/* 颜色选择器 */
-.color-options {
-    display: flex;
-    gap: 10px;
-    margin-top: 5px;
-}
-
-.color-options input {
-    display: none;
-}
-
-/* 隐藏原生radio */
-.color-options label {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: transform 0.2s;
-}
-
-.color-options input:checked+label {
-    border-color: #333;
-    transform: scale(1.1);
-}
-
-/* ============================
-   悬浮按钮 (FAB) 修复版
-   ============================ */
+/* =========================================
+   🟢 悬浮按钮 (FAB) - 反色设计与修复
+   ========================================= */
 .fab-container {
     position: fixed;
-    bottom: 50px;
-    right: 30px;
+    bottom: 40px;
+    right: 24px;
     z-index: 1000;
     display: flex;
     flex-direction: column-reverse;
     align-items: center;
-    gap: 15px;
-    /* 关键：允许点击，但禁用默认的触摸操作以免干扰拖拽 */
     touch-action: none;
+    /* 关键：禁止浏览器默认触摸行为 */
+}
+
+.fab-options {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 15px;
+    /* 增加间距 */
+    margin-bottom: 15px;
 }
 
 .fab-btn {
@@ -204,20 +234,26 @@ button {
     height: 56px;
     border-radius: 50%;
     border: none;
-    color: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    transition: transform 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
+/* 主按钮：默认白色底，黑色图标 */
 .main-btn {
-    background: var(--primary-color);
-    width: 60px;
-    height: 60px;
+    background: white;
+    color: #333;
+}
+
+/* 展开状态：反转为黑色底，白色图标 */
+.fab-container.active .main-btn {
+    background: #333;
+    color: white;
+    transform: rotate(45deg);
 }
 
 .sub-btn {
@@ -225,15 +261,10 @@ button {
     color: #555;
     width: 48px;
     height: 48px;
+    font-size: 16px;
     opacity: 0;
     transform: translateY(20px) scale(0.5);
     pointer-events: none;
-    transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
-}
-
-.fab-container.active .main-btn {
-    transform: rotate(45deg);
-    background: #333;
 }
 
 .fab-container.active .sub-btn {
@@ -242,16 +273,31 @@ button {
     pointer-events: auto;
 }
 
-/* 移动端适配 */
+/* =========================================
+   📱 手机/平板适配修复
+   ========================================= */
 @media (max-width: 768px) {
     .main-layout {
         flex-direction: column;
     }
 
-    .sidebar-section {
-        display: none;
+    /* 修复日历高度 */
+    .calendar-section {
+        height: 60vh;
+        border-bottom: 1px solid #eee;
     }
 
-    /* 手机端暂时隐藏侧边栏，太挤了，或者做成底部弹出的 */
-    /* 如果你想在手机端保留任务列表，可以取消上面的 display:none，改为 height: 30% */
+    /* 修复侧边栏消失问题：改为底部显示 */
+    .sidebar-section {
+        width: 100%;
+        height: 40vh;
+        /* 剩余高度 */
+        border-left: none;
+        padding-bottom: 80px;
+        /* 给悬浮按钮留位置 */
+    }
+
+    .fc-toolbar-title {
+        font-size: 1.1em !important;
+    }
 }

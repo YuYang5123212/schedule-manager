@@ -3,12 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
-    <!-- 修复移动端缩放和滚动问题 -->
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>我的日程管理系统</title>
+    <title>我的日程管理</title>
+    <!-- 网页图标 (Favicon) -->
+    <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4c5.png" type="image/png">
+
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-    <link rel="stylesheet" href="style.css?v=4.0">
+    <link rel="stylesheet" href="style.css?v=5.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -17,61 +19,63 @@
     <!-- 顶部 -->
     <div class="top-bar">
         <div class="logo">📅 个人日程</div>
-        <div class="logo">📅 个人日程</div>
         <div id="status" class="status-badge">连接中...</div>
     </div>
 
     <!-- 主布局 -->
     <div class="main-layout">
-        <!-- 日历容器 (增加 fade-anim 类用于动画) -->
         <div class="calendar-section fade-anim" id="calendar-container">
             <div id='calendar'></div>
         </div>
 
-        <!-- 侧边栏 -->
         <div class="sidebar-section">
-            <h3>📌 待办事项</h3>
-            <h3>📌 待办事项</h3>
+            <h3>📌 待办与备注</h3>
             <div id="task-list" class="task-container">
-                <p style="color:#999; text-align:center; margin-top:20px">加载中...</p>
+                <p style="color:#999; text-align:center;">加载中...</p>
             </div>
         </div>
     </div>
 
-    <!-- 自定义新建/编辑弹窗 -->
+    <!-- 🟢 全新设计的弹窗 -->
     <div id="eventModal" class="modal-overlay" style="display:none;">
         <div class="modal-content">
-            <h3 id="modalTitle">📅 新建日程</h3>
-            <input type="text" id="eventTitleInput" placeholder="请输入日程内容 (如: 高数课)" autocomplete="off">
+            <h3 id="modalTitle">新建日程</h3>
 
-            <div class="color-picker">
-                <p>选择分类颜色:</p>
-                <div class="color-options">
-                    <!-- 蓝色(默认) -->
-                    <input type="radio" name="eventColor" value="#4a90e2" id="c1" checked>
-                    <label for="c1" style="background:#4a90e2"></label>
+            <!-- 1. 标题 -->
+            <div class="input-group">
+                <label>日程内容</label>
+                <input type="text" id="eventTitleInput" placeholder="例如：高数课" autocomplete="off">
+            </div>
 
-                    <!-- 红色(紧急/考试) -->
-                    <input type="radio" name="eventColor" value="#ff6b6b" id="c2">
-                    <label for="c2" style="background:#ff6b6b"></label>
+            <!-- 2. 备注 -->
+            <div class="input-group">
+                <label>备注详情</label>
+                <input type="text" id="eventDescInput" placeholder="例如：教2-101，张老师" autocomplete="off">
+            </div>
 
-                    <!-- 绿色(生活/娱乐) -->
-                    <input type="radio" name="eventColor" value="#2ecc71" id="c3">
-                    <label for="c3" style="background:#2ecc71"></label>
+            <!-- 3. 自定义标签系统 -->
+            <div class="input-group">
+                <label>选择标签</label>
+                <div id="tags-container" class="tags-wrapper">
+                    <!-- JS 会在这里生成标签 -->
+                </div>
+                <!-- 添加新标签的按钮 -->
+                <div class="add-tag-trigger" onclick="toggleTagForm()">+ 新建标签</div>
 
-                    <!-- 紫色(社团/其他) -->
-                    <input type="radio" name="eventColor" value="#9b59b6" id="c4">
-                    <label for="c4" style="background:#9b59b6"></label>
-
-                    <!-- 橙色(作业) -->
-                    <input type="radio" name="eventColor" value="#f39c12" id="c5">
-                    <label for="c5" style="background:#f39c12"></label>
+                <!-- 新建标签的小表单 (默认隐藏) -->
+                <div id="new-tag-form"
+                    style="display:none; margin-top:10px; padding:10px; background:#f5f5f5; border-radius:8px;">
+                    <input type="text" id="newTagName" placeholder="标签名 (如: 社团)" style="width:60%; font-size:12px;">
+                    <input type="color" id="newTagColor" value="#4a90e2"
+                        style="width:30px; height:30px; border:none; vertical-align:middle;">
+                    <button onclick="addNewTag()" style="font-size:12px; padding:4px 8px;">确定</button>
                 </div>
             </div>
 
             <input type="hidden" id="eventStartInput">
             <input type="hidden" id="eventEndInput">
-            <input type="hidden" id="eventIdInput"> <!-- 用于存储正在编辑的事件ID -->
+            <input type="hidden" id="eventIdInput">
+            <input type="hidden" id="selectedTagColor"> <!-- 存储选中的颜色 -->
 
             <div class="modal-buttons">
                 <button onclick="closeModal()" class="btn-cancel">取消</button>
@@ -98,7 +102,7 @@
         </div>
     </div>
 
-    <script type="module" src="script.js?v=4.0"></script>
+    <script type="module" src="script.js?v=5.0"></script>
 </body>
 
 </html>

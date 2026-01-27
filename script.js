@@ -5,7 +5,7 @@
 
 // 1. 引入 Firebase 模块
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // 2. Firebase 配置 (替换为自己的)
 // Your web app's Firebase configuration
@@ -22,198 +22,239 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const eventsCollection = collection(db, "events");
+const tagsCollection = collection(db, "tags"); // 新增标签集合
 
 document.addEventListener('DOMContentLoaded', function () {
+    // 1. 初始化 FullCalendar
     var calendarEl = document.getElementById('calendar');
-    var taskListEl = document.getElementById('task-list');
-
-    // ===========================================
-    // 1. FullCalendar 配置
-    // ===========================================
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        // 自定义滚动周视图
         views: {
             rollingWeek: {
                 type: 'timeGrid',
                 duration: { days: 7 },
-                dateIncrement: { days: 1 }, // 每次滑动一天
-                buttonText: '7天'
+                dateIncrement: { days: 1 },
+                buttonText: '周视'
             }
         },
-        initialView: 'multiMonthYear', // 默认年历 (平板/手机也生效)
-        headerToolbar: false, // 隐藏自带头部，完全靠FAB控制
-
+        initialView: 'dayGridMonth', // 默认月历
+        // 🟢 恢复顶部导航
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: '' // 留空，用 FAB 切换视图
+        },
         locale: 'zh-cn',
-        firstDay: 1, // 周一为第一天
-        navLinks: false,
+        navLinks: true, // 允许点击日期数字
         editable: true,
         selectable: true,
-        dayMaxEvents: false, // 年历显示小圆点
-        nowIndicator: true,  // 红线
-        scrollTime: '08:00:00', // 🔴 修复：周历默认滚动到早上8点，而不是0点
+        nowIndicator: true,
 
-        // ===========================================
-        // 🟢 交互核心逻辑 (解决冲突)
-        // ===========================================
-
-        // A. 点击空白日期 (导航下钻)
+        // 交互逻辑
         dateClick: function (info) {
-            let view = calendar.view.type;
-            playAnimation(); // 播放切换动画
-
-            if (view === 'multiMonthYear') {
-                // 年 -> 月
+            // 点击日期 -> 切换视图
+            if (calendar.view.type === 'multiMonthYear') {
                 calendar.changeView('dayGridMonth', info.dateStr);
-            } else if (view === 'dayGridMonth') {
-                // 月 -> 周
+            } else if (calendar.view.type === 'dayGridMonth') {
                 calendar.changeView('rollingWeek', info.dateStr);
             }
-            // 注意：周视图(rollingWeek)的点击行为由 select 接管
         },
-
-        // B. 框选时间段 (新建日程)
         select: function (info) {
-            // 只有在周视图才允许通过框选新建，防止年/月误触
+            // 只有在周视图可以通过框选新建
             if (calendar.view.type === 'rollingWeek') {
                 openModal(null, info.startStr, info.endStr);
             }
-            calendar.unselect();
         },
-
-        // C. 点击已有日程 (编辑/删除)
         eventClick: function (info) {
-            // 任何视图点击日程都弹出编辑
             openModal(info.event);
         },
-
-        // D. 拖拽/缩放日程 (更新时间)
         eventDrop: function (info) { updateDbEvent(info.event); },
         eventResize: function (info) { updateDbEvent(info.event); }
     });
-
     calendar.render();
 
     // ===========================================
-    // 2. 弹窗与数据逻辑
+    // 2. 标签系统逻辑
+    // ===========================================
+    let currentTags = [];
+
+    // 加载标签 (从 Firebase)
+    async function loadTags() {
+        const q = query(tagsCollection);
+        const snapshot = await getDocs(q);
+        const container = document.getElementById('tags-container');
+        container.innerHTML = ''; // 清空
+
+        currentTags = [];
+        snapshot.forEach(doc => {
+            let t = doc.data();
+            t.id = doc.id;
+            currentTags.push(t);
+            renderTagChip(t, container);
+        });
+
+        // 如果没有标签，添加几个默认的
+        if (currentTags.length === 0) {
+            addDefaultTags();
+        }
+    }
+
+    function renderTagChip(tag, container) {
+        let chip = document.createElement('div');
+        chip.className = 'tag-chip';
+        chip.style.backgroundColor = tag.color;
+        chip.innerText = tag.name;
+        chip.onclick = () => selectTag(chip, tag.color);
+        container.appendChild(chip);
+    }
+
+    // 选中标签效果
+    function selectTag(element, color) {
+        // 移除其他选中状态
+        document.querySelectorAll('.tag-chip').forEach(el => el.classList.remove('selected'));
+        // 选中当前
+        element.classList.add('selected');
+        document.getElementById('selectedTagColor').value = color;
+    }
+
+    // 新建标签到云端
+    window.toggleTagForm = function () {
+        let form = document.getElementById('new-tag-form');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    };
+
+    window.addNewTag = async function () {
+        let name = document.getElementById('newTagName').value;
+        let color = document.getElementById('newTagColor').value;
+        if (name) {
+            await addDoc(tagsCollection, { name, color });
+            document.getElementById('newTagName').value = '';
+            toggleTagForm();
+            loadTags(); // 刷新
+        }
+    };
+
+    async function addDefaultTags() {
+        await addDoc(tagsCollection, { name: "课程", color: "#4a90e2" });
+        await addDoc(tagsCollection, { name: "考试", color: "#ff6b6b" });
+        await addDoc(tagsCollection, { name: "生活", color: "#2ecc71" });
+        loadTags();
+    }
+
+    // 初始化加载
+    loadTags();
+
+    // ===========================================
+    // 3. 弹窗与事件保存
     // ===========================================
     const modal = document.getElementById('eventModal');
 
-    // 打开弹窗 (新建 或 编辑)
-    window.openModal = function (event, startStr, endStr) {
+    window.openModal = function (event, start, end) {
         modal.style.display = 'flex';
-        // 如果传了 event，说明是编辑模式
+        loadTags(); // 每次打开刷新标签
+
         if (event) {
+            // 编辑模式
             document.getElementById('modalTitle').innerText = '✏️ 编辑日程';
             document.getElementById('eventTitleInput').value = event.title;
+            document.getElementById('eventDescInput').value = event.extendedProps.description || '';
             document.getElementById('eventIdInput').value = event.id;
+            document.getElementById('selectedTagColor').value = event.backgroundColor;
             document.getElementById('btnDelete').style.display = 'block';
 
-            // 选中对应的颜色
-            let color = event.backgroundColor;
-            let radio = document.querySelector(`input[name="eventColor"][value="${color}"]`);
-            if (radio) radio.checked = true;
+            // 尝试自动选中对应颜色的标签
+            setTimeout(() => {
+                let chips = document.querySelectorAll('.tag-chip');
+                chips.forEach(chip => {
+                    // 简单的颜色匹配
+                    if (chip.style.backgroundColor === event.backgroundColor) chip.classList.add('selected');
+                });
+            }, 100);
 
         } else {
             // 新建模式
             document.getElementById('modalTitle').innerText = '📅 新建日程';
             document.getElementById('eventTitleInput').value = '';
-            document.getElementById('eventIdInput').value = ''; // 空ID表示新建
-            document.getElementById('eventStartInput').value = startStr;
-            document.getElementById('eventEndInput').value = endStr;
+            document.getElementById('eventDescInput').value = '';
+            document.getElementById('eventIdInput').value = '';
+            document.getElementById('eventStartInput').value = start;
+            document.getElementById('eventEndInput').value = end;
+            document.getElementById('selectedTagColor').value = '#4a90e2'; // 默认色
             document.getElementById('btnDelete').style.display = 'none';
         }
     };
 
-    window.closeModal = function () {
-        modal.style.display = 'none';
-    };
+    window.closeModal = function () { modal.style.display = 'none'; };
 
-    // 保存 (新增 或 更新)
     window.saveEvent = function () {
         let title = document.getElementById('eventTitleInput').value;
+        let desc = document.getElementById('eventDescInput').value;
         let id = document.getElementById('eventIdInput').value;
-        let color = document.querySelector('input[name="eventColor"]:checked').value;
+        let color = document.getElementById('selectedTagColor').value;
 
-        if (!title) return alert("请输入内容");
+        if (!title) return alert("写点什么吧");
+
+        let data = {
+            title: title,
+            description: desc,
+            backgroundColor: color,
+            borderColor: color
+        };
 
         if (id) {
-            // 更新已有
-            updateDoc(doc(db, "events", id), {
-                title: title,
-                backgroundColor: color,
-                borderColor: color
-            });
+            updateDoc(doc(db, "events", id), data);
         } else {
-            // 新建
-            let start = document.getElementById('eventStartInput').value;
-            let end = document.getElementById('eventEndInput').value;
-            addDoc(eventsCollection, {
-                title: title,
-                start: start,
-                end: end,
-                allDay: start.indexOf('T') === -1, // 如果没有时间T，就是全天
-                backgroundColor: color,
-                borderColor: color
-            });
+            data.start = document.getElementById('eventStartInput').value;
+            data.end = document.getElementById('eventEndInput').value;
+            data.allDay = data.start.indexOf('T') === -1;
+            addDoc(eventsCollection, data);
         }
         closeModal();
     };
 
-    // 删除
     window.deleteCurrentEvent = function () {
         let id = document.getElementById('eventIdInput').value;
-        if (id && confirm("确定删除吗？")) {
+        if (confirm("删除此日程？")) {
             deleteDoc(doc(db, "events", id));
             closeModal();
         }
     };
 
-    // 辅助：新建日程按钮 (FAB调用)
+    // FAB 新建快捷入口
     window.openCreateModal = function () {
-        // 默认新建在今天
         let today = new Date().toISOString().split('T')[0];
         openModal(null, today, today);
         toggleFab(false);
-    };
-
-    // ===========================================
-    // 3. 视图切换与动画
-    // ===========================================
-    window.changeView = function (viewName) {
-        playAnimation();
-        calendar.changeView(viewName);
-        toggleFab(false);
-    };
-
-    function playAnimation() {
-        let container = document.getElementById('calendar-container');
-        container.classList.remove('fade-anim');
-        void container.offsetWidth; // 触发重绘
-        container.classList.add('fade-anim');
     }
 
-    // 更新 Firebase 数据逻辑 (同步)
+    // ===========================================
+    // 4. 数据同步与渲染
+    // ===========================================
     const q = query(eventsCollection, orderBy("start", "asc"));
     onSnapshot(q, (snapshot) => {
         document.getElementById('status').innerText = '✅';
         calendar.removeAllEvents();
-        taskListEl.innerHTML = '';
+        let taskList = document.getElementById('task-list');
+        taskList.innerHTML = '';
 
         snapshot.forEach((doc) => {
             let data = doc.data();
-            let eventObj = { id: doc.id, ...data };
-            calendar.addEvent(eventObj);
+            let event = { id: doc.id, ...data };
+            calendar.addEvent(event);
 
-            // 侧边栏列表渲染
+            // 侧边栏渲染
             let div = document.createElement('div');
             div.className = 'task-item';
-            div.style.borderLeftColor = data.backgroundColor || '#4a90e2'; // 使用日程颜色
-            div.innerHTML = `<b>${data.title}</b><br><small>${data.start}</small>`;
+            div.style.borderLeftColor = data.backgroundColor;
+            div.innerHTML = `
+                <div style="font-weight:600">${data.title}</div>
+                <div class="task-desc">${data.start.substring(0, 10)} ${data.description || ''}</div>
+            `;
             div.onclick = () => {
                 calendar.changeView('rollingWeek', data.start);
-                playAnimation();
+                // 移动端点击后滚动到顶部看日历
+                if (window.innerWidth < 768) window.scrollTo({ top: 0, behavior: 'smooth' });
             };
-            taskListEl.appendChild(div);
+            taskList.appendChild(div);
         });
     });
 
@@ -222,83 +263,63 @@ document.addEventListener('DOMContentLoaded', function () {
             start: e.startStr, end: e.endStr, allDay: e.allDay
         });
     }
+
+    window.changeView = function (v) {
+        calendar.changeView(v);
+        toggleFab(false);
+    }
 });
 
 // ===========================================
-// 4. 修复版 FAB 拖拽逻辑 (兼容 PC 和 Mobile)
+// 5. 修复版 FAB 拖拽 (使用 Pointer Events)
 // ===========================================
 const fab = document.getElementById('fab-container');
 const fabMain = document.getElementById('fab-main');
-
 let isDragging = false;
-let startX, startY;
-let initialLeft, initialTop;
+let startX, startY, initialLeft, initialTop;
 
-// 通用开始函数
-function startDrag(e) {
+fabMain.addEventListener('pointerdown', (e) => {
     isDragging = false;
-    // 获取坐标 (兼容 Touch 和 Mouse)
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    fabMain.setPointerCapture(e.pointerId); // 锁定指针
 
-    startX = clientX;
-    startY = clientY;
+    startX = e.clientX;
+    startY = e.clientY;
 
     const rect = fab.getBoundingClientRect();
     initialLeft = rect.left;
     initialTop = rect.top;
 
-    // 移除 bottom/right 定位，改为绝对定位跟随
+    // 转换为绝对定位
     fab.style.bottom = 'auto';
     fab.style.right = 'auto';
     fab.style.left = initialLeft + 'px';
     fab.style.top = initialTop + 'px';
 
-    // 绑定移动和结束事件
-    if (e.type === 'touchstart') {
-        document.addEventListener('touchmove', onDragMove, { passive: false });
-        document.addEventListener('touchend', onDragEnd);
-    } else {
-        document.addEventListener('mousemove', onDragMove);
-        document.addEventListener('mouseup', onDragEnd);
-    }
-}
+    fabMain.addEventListener('pointermove', onMove);
+    fabMain.addEventListener('pointerup', onUp);
+});
 
-function onDragMove(e) {
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+function onMove(e) {
+    let dx = e.clientX - startX;
+    let dy = e.clientY - startY;
 
-    const dx = clientX - startX;
-    const dy = clientY - startY;
-
-    // 移动超过 5px 才算拖拽
-    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-        isDragging = true;
-    }
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) isDragging = true;
 
     if (isDragging) {
-        e.preventDefault(); // 防止页面滚动
         fab.style.left = (initialLeft + dx) + 'px';
         fab.style.top = (initialTop + dy) + 'px';
-        toggleFab(false); // 拖拽时收起菜单
+        toggleFab(false);
     }
 }
 
-function onDragEnd(e) {
-    document.removeEventListener('mousemove', onDragMove);
-    document.removeEventListener('mouseup', onDragEnd);
-    document.removeEventListener('touchmove', onDragMove);
-    document.removeEventListener('touchend', onDragEnd);
+function onUp(e) {
+    fabMain.removeEventListener('pointermove', onMove);
+    fabMain.removeEventListener('pointerup', onUp);
 
     if (!isDragging) {
-        // 如果不是拖拽，那就是点击
         toggleFab();
     }
 }
-
-// 绑定事件
-fabMain.addEventListener('mousedown', startDrag);
-fabMain.addEventListener('touchstart', startDrag, { passive: false });
 
 window.toggleFab = function (force) {
     if (typeof force === 'boolean') {
